@@ -2,6 +2,7 @@ from argparse import ArgumentParser as _ArgumentParser
 from subprocess import call as _call
 import os as _os
 import sys as _sys
+import re
 
 from npm2deb import Npm2Deb as _Npm2Deb
 from npm2deb import utils as _utils
@@ -265,7 +266,29 @@ def show_reverse_dependencies(args):
 
 
 def create(args):
+    version = ''
+    node_module = ''
+    fullName = args.node_module
+    if fullName and re.search('@',fullName):
+        nodeNameList = fullName.split('@')
+        length = len(nodeNameList)
+        version = nodeNameList[-1]
+        if length == 2:
+            node_module = nodeNameList[0]
+        elif length > 2:
+            nodeNameList = nodeNameList[:-1]
+            node_module = '@'.join(nodeNameList)
+    elif fullName:
+        node_module = fullName
+
+    print("Module = "+node_module+" version = "+version)
+    args.version = version
+    #print(args)
+    exit(1)
     npm2deb = get_npm2deb_instance(args)
+    # print(args)
+    #print(vars(args))
+    
     try:
         saved_path = _os.getcwd()
         _utils.create_dir(npm2deb.name)
@@ -286,6 +309,7 @@ def get_npm2deb_instance(args):
         print('please specify a node_module.')
         exit(1)
     try:
+    	# print(vars(args))
         return _Npm2Deb(args=vars(args))
     except ValueError as value_error:
         print(value_error)
